@@ -28,7 +28,7 @@ async def read_actividades(db: Session = Depends(get_db)):
 async def read_turnos(db: Session = Depends(get_db)):
     turnos = db.query(Turno).all()
     if not turnos:
-        raise HTTPException(status_code=404, detail="No hay turnos dispopnibles")
+        raise HTTPException(status_code=404, detail="No hay turnos disponibles")
     return turnos
 
 
@@ -40,3 +40,14 @@ async def post_turno(turno: TurnoPost, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_turno)
     return db_turno
+
+
+#Eliminar turnos
+@app.delete("/turnos/{id_turno}", status_code=204)
+async def delete_turno(id_turno: int, db:Session = Depends(get_db)):
+    turno = db.query(Turno).filter(Turno.id_turno == id_turno).first()
+    if not turno:
+        raise HTTPException(status_code=404, detail="No se encontro un turno para eliminar")
+    db.delete(turno)
+    db.commit()
+    return {"detail": "Turno eliminado correctamente"}
