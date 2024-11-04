@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import engine, SessionLocal
-from models import Actividad, Turno, Base
-from schemas import TurnoPost, ActividadPost, ActividadResponse, ActividadUpdate
+from models import Actividad, Turno, Alumno, Base
+from schemas import TurnoPost, ActividadPost, ActividadResponse, ActividadUpdate, AlumnoPost
 
 app = FastAPI()
 
@@ -110,3 +110,41 @@ async def delete_turno(id_turno: int, db:Session = Depends(get_db)):
 #                               ALUMNOS                                                     #
 #############################################################################################
 
+#Agregar alumnos
+@app.post("/alumnos")
+async def post_alumno(alumno: AlumnoPost, db: Session = Depends(get_db)):
+    nuevo_alumno = Alumno(
+        ci_alumno=alumno.ci_alumno,
+        nombre=alumno.nombre,
+        apellido=alumno.apellido,
+        fecha_nacimiento=alumno.fecha_nacimiento,
+        telefono=alumno.telefono,
+        correo=alumno.correo
+    )
+
+    db.add(nuevo_alumno)
+    db.commit()
+    db.refresh(nuevo_alumno)
+    return nuevo_alumno
+
+
+#Eliminar alumnos
+@app.delete("/alumnos/{ci_alumno}", status_code=200)
+async def delete_alumno(ci_alumno: int, db: Session = Depends(get_db)):
+    alumno= db.query(Alumno).filter(Alumno.ci_alumno == ci_alumno).first()
+    if not alumno:
+        raise HTTPException(status_code=404, detail="No se encontro el alumno")
+    db.delete(alumno)
+    db.commit()
+    return {"detail": "Alumno eliminado correctamente"}
+
+
+#Trae todos los alumnos disponibles
+@app.get("/alumnos")
+async def read_alumnos(db: Session = Depends(get_db)):
+    alumnos = db.query(Alumno).all()
+    if not alumnos:
+        raise HTTPException(status_code=404, detail="No hay alumnos disponibles")
+    return alumnos
+
+    

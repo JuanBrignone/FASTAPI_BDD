@@ -1,5 +1,14 @@
 from pydantic import BaseModel, Field
-from datetime import time
+from datetime import time, date
+
+
+class AlumnoPost(BaseModel):
+    ci_alumno: int
+    nombre: str
+    apellido: str
+    fecha_nacimiento: date
+    telefono: str
+    correo: str
 
 
 class TurnoPost(BaseModel):

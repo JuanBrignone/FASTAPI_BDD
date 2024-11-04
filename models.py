@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Time
+from sqlalchemy import Column, Integer, String, Float, Time, Date
 from database import Base
 
 class Actividad(Base):
@@ -16,3 +16,14 @@ class Turno(Base):
     id_turno = Column(Integer, primary_key=True, index=True)
     hora_inicio = Column(Time, nullable=False)
     hora_fin = Column(Time, nullable=False)
+
+
+class Alumno(Base):
+    __tablename__ = "alumnos"
+
+    ci_alumno = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(50), nullable=False)
+    apellido = Column(String(50), nullable=False)
+    fecha_nacimiento = Column(Date, nullable=False)
+    telefono = Column(String(15), nullable=True)
+    correo = Column(String(255), nullable=False)
