@@ -10,6 +10,11 @@ class AlumnoPost(BaseModel):
     telefono: str
     correo: str
 
+class InstructorPost(BaseModel):
+    ci_instructor: int
+    nombre: str
+    apellido: str
+
 
 class TurnoPost(BaseModel):
     hora_inicio: time

@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import engine, SessionLocal
-from models import Actividad, Turno, Alumno, Base
-from schemas import TurnoPost, ActividadPost, ActividadResponse, ActividadUpdate, AlumnoPost
+from models import Actividad, Turno, Alumno, Instructor, Base
+from schemas import TurnoPost, ActividadPost, ActividadResponse, ActividadUpdate, AlumnoPost, InstructorPost
 
 app = FastAPI()
 
@@ -53,7 +53,7 @@ async def delete_actividad(id_actividad: int, db:Session = Depends(get_db)):
 
 #Modificar actividad
 @app.put("/actividades/{id_actividad}", response_model=ActividadResponse)
-async def update_actividad(id_actividad: int, actividad: ActividadUpdate, db: Session = Depends(get_db)):
+async def update_actividad(id_actividad: int, actividad: ActividadUpdate, db: Session = Depends(get_db)):   
     db_actividad = db.query(Actividad).filter(Actividad.id_actividad == id_actividad).first()
     if not db_actividad:
         raise HTTPException(status_code=404, detail="Actividad no encontrada")
@@ -147,4 +147,28 @@ async def read_alumnos(db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No hay alumnos disponibles")
     return alumnos
 
-    
+
+#############################################################################################
+#                               INSTRUCTORES                                                #
+#############################################################################################
+
+#Agrega Instructor
+@app.post("/instructores")
+async def post_instructor(instructor: InstructorPost, db: Session = Depends(get_db)):
+    nuevo_instructor = Instructor(
+        ci_instructor= instructor.ci_instructor,
+        nombre=instructor.nombre,
+        apellido=instructor.apellido
+    )
+    db.add(nuevo_instructor)
+    db.commit()
+    db.refresh(nuevo_instructor)
+    return nuevo_instructor
+
+#Trae todos los instructores
+@app.get("/instructores")
+async def read_instructores( db: Session = Depends(get_db)):
+    instructores = db.query(Instructor).all()
+    if not instructores:
+        raise HTTPException(status_code=404, detail="No hay instructores disponibles")
+    return instructores

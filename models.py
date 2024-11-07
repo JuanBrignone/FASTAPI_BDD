@@ -27,3 +27,11 @@ class Alumno(Base):
     fecha_nacimiento = Column(Date, nullable=False)
     telefono = Column(String(15), nullable=True)
     correo = Column(String(255), nullable=False)
+
+
+class Instructor(Base):
+    __tablename__ = "instructores"
+
+    ci_instructor = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(50), nullable=False)
+    apellido = Column(String(50), nullable=False)
