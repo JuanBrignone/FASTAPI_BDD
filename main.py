@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, SessionLocal
 from models import Actividad, Turno, Alumno, Instructor, Login, Base
-from schemas import TurnoPost, ActividadPost, ActividadResponse, ActividadUpdate, AlumnoPost, InstructorPost, AlumnoResponse
+from schemas import TurnoPost, ActividadPost, ActividadResponse, ActividadUpdate, AlumnoPost, InstructorPost, AlumnoResponse, LoginRequest, LoginResponse
 
 app = FastAPI()
 
@@ -215,3 +215,16 @@ async def create_alumno(alumno: AlumnoPost, db: Session = Depends(get_db)):
     db.commit()
 
     return db_alumno
+
+
+#############################################################################################
+#                               LOGIN                                                       #
+#############################################################################################
+
+@app.post("/login", response_model=LoginResponse)  
+async def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+    db_usuario = db.query(Login).filter(Login.correo == login_data.correo).first()
+    if not db_usuario or db_usuario.contraseña != login_data.contraseña:
+        raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+    
+    return {"message": "Inicio de sesión exitoso"}

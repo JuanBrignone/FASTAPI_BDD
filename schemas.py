@@ -53,3 +53,11 @@ class AlumnoResponse(BaseModel):
     fecha_nacimiento: date
     telefono: str
     correo: str
+
+
+class LoginRequest(BaseModel):
+    correo: str
+    contraseña: str
+
+class LoginResponse(BaseModel):
+    message: str
