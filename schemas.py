@@ -9,6 +9,12 @@ class AlumnoPost(BaseModel):
     fecha_nacimiento: date
     telefono: str
     correo: str
+    contraseña: str
+
+class LoginPost(BaseModel):
+    correo: str
+    contraseña: str
+    ci_alumno: int
 
 class InstructorPost(BaseModel):
     ci_instructor: int
@@ -26,7 +32,7 @@ class ActividadPost(BaseModel):
     costo: float
 
 
-#estructura que se utiliza para la respuesta al cliente
+#estructura que se utiliza para la respuesta al cliente (respuesta en postman)
 class ActividadResponse(BaseModel):
     id_actividad: int
     nombre: str
@@ -38,3 +44,12 @@ class ActividadUpdate(BaseModel):
     nombre: str = Field(None, max_length=100)
     descripcion: str = Field(None, max_length=255)
     costo: float = Field(None, gt=0)
+
+
+class AlumnoResponse(BaseModel):
+    ci_alumno: int
+    nombre: str
+    apellido: str
+    fecha_nacimiento: date
+    telefono: str
+    correo: str

@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, Time, Date
+from sqlalchemy import Column, Integer, String, Float, Time, Date, ForeignKey
 from database import Base
+from sqlalchemy.orm import relationship
 
 class Actividad(Base):
     __tablename__ = "actividades"
@@ -27,6 +28,20 @@ class Alumno(Base):
     fecha_nacimiento = Column(Date, nullable=False)
     telefono = Column(String(15), nullable=True)
     correo = Column(String(255), nullable=False)
+    contraseña = Column(String(255), nullable=False)
+
+    login = relationship("Login", back_populates="alumno")
+
+
+class Login(Base):
+    __tablename__ = "login"
+    correo = Column(String(255), primary_key=True, index=True)
+    contraseña = Column(String(255), nullable=False)
+    ci_alumno = Column(Integer, ForeignKey('alumnos.ci_alumno'), nullable=False)
+
+    alumno = relationship("Alumno", back_populates="login")
+
+
 
 
 class Instructor(Base):

@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, SessionLocal
-from models import Actividad, Turno, Alumno, Instructor, Base
-from schemas import TurnoPost, ActividadPost, ActividadResponse, ActividadUpdate, AlumnoPost, InstructorPost
+from models import Actividad, Turno, Alumno, Instructor, Login, Base
+from schemas import TurnoPost, ActividadPost, ActividadResponse, ActividadUpdate, AlumnoPost, InstructorPost, AlumnoResponse
 
 app = FastAPI()
 
@@ -12,6 +13,14 @@ def get_db():
         yield db
     finally:
         db.close()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite todas las direcciones
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos los métodos
+    allow_headers=["*"],  # Permite todos los encabezados
+)
 
 
 #############################################################################################
@@ -172,3 +181,37 @@ async def read_instructores( db: Session = Depends(get_db)):
     if not instructores:
         raise HTTPException(status_code=404, detail="No hay instructores disponibles")
     return instructores
+
+
+
+#############################################################################################
+#                               REGISTRO                                                    #
+#############################################################################################
+
+
+#Registra un alumno y guarda la cedula, correo y contraseña en la tabla login
+@app.post("/register", response_model=AlumnoResponse)
+async def create_alumno(alumno: AlumnoPost, db: Session = Depends(get_db)):
+
+    db_correo = db.query(Login).filter(Login.correo == alumno.correo).first()
+    if db_correo:
+        raise HTTPException(status_code=400, detail="El correo ya está registrado")
+
+    db_alumno = Alumno(
+        ci_alumno=alumno.ci_alumno,
+        nombre=alumno.nombre,
+        apellido=alumno.apellido,
+        fecha_nacimiento=alumno.fecha_nacimiento,
+        telefono=alumno.telefono,
+        correo=alumno.correo,
+        contraseña=alumno.contraseña
+    )
+    db.add(db_alumno)
+    db.commit()
+    db.refresh(db_alumno)
+
+    db_login = Login(correo=alumno.correo, contraseña=alumno.contraseña, ci_alumno=alumno.ci_alumno)
+    db.add(db_login)
+    db.commit()
+
+    return db_alumno
