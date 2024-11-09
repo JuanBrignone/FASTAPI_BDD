@@ -2,8 +2,8 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, SessionLocal
-from models import Actividad, Turno, Alumno, Instructor, Login, Base
-from schemas import TurnoPost, ActividadPost, ActividadResponse, ActividadUpdate, AlumnoPost, InstructorPost, AlumnoResponse, LoginRequest, LoginResponse
+from models import Actividad, Turno, Alumno, Instructor, Login, Clase, Base
+from schemas import TurnoPost, ActividadPost, ActividadResponse, ActividadUpdate, AlumnoPost, InstructorPost, AlumnoResponse, LoginRequest, LoginResponse, ClaseCreate
 
 app = FastAPI()
 
@@ -183,6 +183,15 @@ async def read_instructores( db: Session = Depends(get_db)):
     return instructores
 
 
+@app.delete("/instructores/{ci_instructor}", status_code=200)
+async def delete_instructor(ci_instructor: int, db: Session = Depends(get_db)):
+    instructor= db.query(Instructor).filter(Instructor.ci_instructor == ci_instructor).first()
+    if not instructor:
+        raise HTTPException(status_code=404, detail="No se encontro el instructor")
+    db.delete(instructor)
+    db.commit()
+    return {"detail": "Instructor eliminado correctamente"}
+
 
 #############################################################################################
 #                               REGISTRO                                                    #
@@ -228,3 +237,39 @@ async def login(login_data: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
     
     return {"message": "Inicio de sesión exitoso"}
+
+
+
+
+#############################################################################################
+#                               INSCRIPCION                                                 #
+#############################################################################################
+
+
+@app.post("/clase", response_model=ClaseCreate)
+async def create_clase(clase: ClaseCreate, db: Session = Depends(get_db)):
+
+    instructor = db.query(Instructor).filter(Instructor.ci_instructor == clase.ci_instructor).first()
+    if not instructor:
+        raise HTTPException(status_code=404, detail="Instructor no encontrado")
+
+    actividad = db.query(Actividad).filter(Actividad.id_actividad == clase.id_actividad).first()
+    if not actividad:
+        raise HTTPException(status_code=404, detail="Actividad no encontrada")
+
+    turno = db.query(Turno).filter(Turno.id_turno == clase.id_turno).first()
+    if not turno:
+        raise HTTPException(status_code=404, detail="Turno no encontrado")
+
+    nueva_clase = Clase(
+        ci_instructor=clase.ci_instructor,
+        id_actividad=clase.id_actividad,
+        id_turno=clase.id_turno,
+        dictada=clase.dictada
+    )
+
+    db.add(nueva_clase)
+    db.commit()
+    db.refresh(nueva_clase)
+
+    return nueva_clase

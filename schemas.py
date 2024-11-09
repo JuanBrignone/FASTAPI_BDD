@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import time, date
+from typing import Optional
 
 
 class AlumnoPost(BaseModel):
@@ -61,3 +62,10 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     message: str
+
+
+class ClaseCreate(BaseModel):
+    ci_instructor: int
+    id_actividad: int
+    id_turno: int
+    dictada: Optional[bool] = False
