@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, SessionLocal
 from models import Actividad, Turno, Alumno, Instructor, Login, Clase, Base
-from schemas import TurnoPost, ActividadPost, ActividadResponse, ActividadUpdate, AlumnoPost, InstructorPost, AlumnoResponse, LoginRequest, LoginResponse, ClaseCreate
+from schemas import TurnoPost, ActividadPost, ActividadResponse 
+from schemas import ActividadUpdate, AlumnoPost, InstructorPost, AlumnoResponse 
+from schemas import LoginRequest, LoginResponse, ClaseCreate, ClaseResponse
 
 app = FastAPI()
 
@@ -246,6 +248,7 @@ async def login(login_data: LoginRequest, db: Session = Depends(get_db)):
 #############################################################################################
 
 
+#Añadir una clase
 @app.post("/clase", response_model=ClaseCreate)
 async def create_clase(clase: ClaseCreate, db: Session = Depends(get_db)):
 
@@ -273,3 +276,23 @@ async def create_clase(clase: ClaseCreate, db: Session = Depends(get_db)):
     db.refresh(nueva_clase)
 
     return nueva_clase
+
+#Mostrar clases
+@app.get("/clases", response_model=list[ClaseResponse])
+def get_clases(db: Session = Depends(get_db)):
+    # Realiza la consulta con los joins necesarios
+    clases = db.query(
+        Clase.id_clase,
+        Actividad.nombre.label("nombre_actividad"),
+        Actividad.costo.label("costo_actividad"),
+        Instructor.nombre.label("nombre_instructor"),
+        Turno.hora_inicio.label("hora_inicio"),
+        Turno.hora_fin.label("hora_fin")
+    ).join(Actividad, Clase.id_actividad == Actividad.id_actividad
+    ).join(Instructor, Clase.ci_instructor == Instructor.ci_instructor
+    ).join(Turno, Clase.id_turno == Turno.id_turno
+    ).all()
+    
+    # Devuelve el resultado en el formato adecuado
+    return [{"id_clase": clase.id_clase,"costo_actividad":clase.costo_actividad, "nombre_actividad": clase.nombre_actividad, "nombre_instructor": clase.nombre_instructor, 
+             "hora_inicio":clase.hora_inicio, "hora_fin":clase.hora_fin} for clase in clases]

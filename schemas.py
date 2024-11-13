@@ -69,3 +69,11 @@ class ClaseCreate(BaseModel):
     id_actividad: int
     id_turno: int
     dictada: Optional[bool] = False
+
+class ClaseResponse(BaseModel):
+    id_clase: int
+    nombre_actividad: str
+    nombre_instructor: str 
+    hora_inicio: time
+    hora_fin: time
+    costo_actividad: int
