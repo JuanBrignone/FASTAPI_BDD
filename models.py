@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Time, Date, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, Float, Time, Text, Date, ForeignKey, Boolean
 from database import Base
 from sqlalchemy.orm import relationship
 
@@ -10,6 +10,7 @@ class Actividad(Base):
     descripcion = Column(String(255), nullable=True)
     costo =  Column(Float, nullable=False)
 
+    equipamientos = relationship("Equipamiento", back_populates="actividad")
     clases = relationship("Clase", back_populates="actividad")
 
 
@@ -68,3 +69,21 @@ class Clase(Base):
     instructor = relationship("Instructor", back_populates="clases")
     actividad = relationship("Actividad", back_populates="clases")
     turno = relationship("Turno", back_populates="clases")
+
+
+class Equipamiento(Base):
+    __tablename__ = "equipamiento"
+    id_equipamiento = Column(Integer, primary_key=True, autoincrement=True)
+    id_actividad = Column(Integer, ForeignKey("actividades.id_actividad"), nullable=False)
+    nombre = Column(String(50), nullable=False)
+    descripcion = Column(Text, nullable=True)
+    costo = Column(Float, nullable=False)
+    actividad = relationship("Actividad", back_populates="equipamientos")
+
+
+
+class AlumnoClase(Base):
+    __tablename__ = "alumno_clase"
+    id_clase = Column(Integer, ForeignKey("clase.id_clase"), primary_key=True, index=True)
+    ci_alumno = Column(Integer, ForeignKey("alumnos.ci_alumno"), primary_key=True, index=True)
+    id_equipamiento = Column(Integer,ForeignKey("equipamiento.id_equipamiento"), nullable=False)

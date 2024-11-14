@@ -1,11 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, SessionLocal
-from models import Actividad, Turno, Alumno, Instructor, Login, Clase, Base
+from models import Actividad, Turno, Alumno,AlumnoClase,Equipamiento,Instructor,Login,Clase, Base
 from schemas import TurnoPost, ActividadPost, ActividadResponse 
-from schemas import ActividadUpdate, AlumnoPost, InstructorPost, AlumnoResponse 
-from schemas import LoginRequest, LoginResponse, ClaseCreate, ClaseResponse
+from schemas import ActividadUpdate, AlumnoPost, InstructorPost, AlumnoResponse, EquipamientoPost 
+from schemas import LoginRequest, LoginResponse, ClaseCreate, ClaseResponse, AlumnoClaseRequest, EquipamientoResponse, EquipamientoResponseActividad
 
 app = FastAPI()
 
@@ -242,6 +242,58 @@ async def login(login_data: LoginRequest, db: Session = Depends(get_db)):
 
 
 
+#############################################################################################
+#                               EQUIPAMIENTO                                                #
+#############################################################################################
+
+#Agregar equipamiento
+@app.post("/equipamiento")
+async def crear_equipamiento(equipamiento: EquipamientoPost, db: Session = Depends(get_db)):
+    nuevo_equipamiento = Equipamiento(
+        id_actividad=equipamiento.id_actividad,
+        nombre=equipamiento.nombre,
+        descripcion=equipamiento.descripcion,
+        costo=equipamiento.costo
+    )
+    
+    db.add(nuevo_equipamiento)
+    db.commit()
+    db.refresh(nuevo_equipamiento)
+
+    return {"message": "Equipamiento creado correctamente.", "data": nuevo_equipamiento}
+
+#Mostrar los equipamientos
+@app.get("/equipamientos", response_model=list[EquipamientoResponse])
+def get_equipamientos(db: Session = Depends(get_db)):
+    equipamientos = db.query(
+        Equipamiento.nombre.label("nombre_equipamiento"),
+        Equipamiento.descripcion.label("descripcion_equipamiento"),
+        Equipamiento.costo.label("costo_equipamiento"),
+        Actividad.nombre.label("nombre_actividad")
+    ).join(Actividad, Equipamiento.id_actividad == Actividad.id_actividad).all()
+    
+    return [{"nombre_actividad": equip.nombre_actividad,
+             "nombre_equipamiento": equip.nombre_equipamiento,
+             "descripcion_equipamiento": equip.descripcion_equipamiento,
+             "costo_equipamiento": equip.costo_equipamiento} for equip in equipamientos]
+
+#GET por actividad
+@app.get("/equipamientos/{id_actividad}", response_model=list[EquipamientoResponseActividad])
+def get_equipamientos_por_actividad(
+    id_actividad: int, 
+    db: Session = Depends(get_db)
+):
+    actividad_existente = db.query(Actividad).filter(Actividad.id_actividad == id_actividad).first()
+    if not actividad_existente:
+        raise HTTPException(status_code=404, detail="Actividad no encontrada.")
+
+    equipamientos = db.query(Equipamiento).filter(Equipamiento.id_actividad == id_actividad).all()
+    
+    if not equipamientos:
+        raise HTTPException(status_code=404, detail="No hay equipamientos para esta actividad.")
+    
+    return equipamientos
+
 
 #############################################################################################
 #                               INSCRIPCION                                                 #
@@ -294,5 +346,30 @@ def get_clases(db: Session = Depends(get_db)):
     ).all()
     
     # Devuelve el resultado en el formato adecuado
-    return [{"id_clase": clase.id_clase,"costo_actividad":clase.costo_actividad, "nombre_actividad": clase.nombre_actividad, "nombre_instructor": clase.nombre_instructor, 
+    return [{"id_clase": clase.id_clase,"costo_actividad":clase.costo_actividad, "nombre_actividad": clase.nombre_actividad, 
+             "nombre_instructor": clase.nombre_instructor, 
              "hora_inicio":clase.hora_inicio, "hora_fin":clase.hora_fin} for clase in clases]
+
+
+
+#Poder inscribirse a una clase
+@app.post("/inscribir_alumno")
+async def inscribir_alumno(alumno_clase: AlumnoClaseRequest, db: Session = Depends(get_db)):
+    # Verificar si el alumno ya está inscrito en la clase
+    existe = db.query(AlumnoClase).filter_by(id_clase=alumno_clase.id_clase, ci_alumno=alumno_clase.ci_alumno).first()
+    
+    if existe:
+        raise HTTPException(status_code=400, detail="El alumno ya está inscrito en esta clase.")
+
+    # Crear un nuevo registro de inscripción
+    nueva_inscripcion = AlumnoClase(
+        id_clase=alumno_clase.id_clase,
+        ci_alumno=alumno_clase.ci_alumno,
+        id_equipamiento=alumno_clase.id_equipamiento
+    )
+    
+    db.add(nueva_inscripcion)
+    db.commit()
+    db.refresh(nueva_inscripcion)
+
+    return {"message": "Alumno inscrito correctamente.", "data": nueva_inscripcion}

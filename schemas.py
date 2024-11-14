@@ -77,3 +77,29 @@ class ClaseResponse(BaseModel):
     hora_inicio: time
     hora_fin: time
     costo_actividad: int
+
+class AlumnoClaseRequest(BaseModel):
+    id_clase: int
+    ci_alumno: int
+    id_equipamiento: Optional[int]
+
+class EquipamientoPost(BaseModel):
+    id_actividad: int
+    nombre: str
+    descripcion: Optional[str]
+    costo: float
+
+class EquipamientoResponse(BaseModel):
+    nombre_actividad: str
+    nombre_equipamiento: str
+    descripcion_equipamiento: str
+    costo_equipamiento: float
+
+
+class EquipamientoResponseActividad(BaseModel):
+    id_equipamiento: int
+    nombre: str
+    descripcion: str
+    costo: float
+
+
